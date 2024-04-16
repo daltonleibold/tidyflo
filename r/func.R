@@ -13,37 +13,31 @@
 #' is robust to outliers
 #' will only ever be at most equal to the arithmetic mean
 geo.mean <- function(x, na.rm = T){
-  x %>%
-    log.sc() %>%
-    mean(., na.rm = na.rm) %>%
-    10^.
+    10^base::mean(log.sc(x), na.rm = na.rm)
 }
 #----
 #' @name se
 #' @param x a numeric vector
 #' @description
-#' calculates the standard error. wrapper of base functions.
+#' calculates the standard error
 se <- function(x, na.rm = T){
-  sd(x, na.rm = na.rm) / sqrt(length(x))
+  stats::sd(x, na.rm = na.rm) / base::sqrt(base::length(x))
 }
 #----
 #' @name r.sd
 #' @param x a numeric vector
 #' @description 
-#' calculates the robust standard deviation
-#' wrapper of base functions
+#' calculates the robust standard deviation; based on median absolute deviation. 
 r.sd <- function(x, na.rm = T) {
-  .mad <- mad(x, constant = 1.4826, na.rm = na.rm) %>%
-    return(.mad * 1.4826) 
+  1.4826 * stats::mad(x, constant = 1.4826, na.rm = na.rm)
 }
 #----
 #' @name r.se
 #' @param x a numeric vector
 #' @description 
 #' calculates the robust standard error
-#' wrapper of base functions
 r.se <- function(x, na.rm = T) {
-  r.se = r.sd(.val, na.rm = na.rm) / sqrt(.n)
+  r.se = r.sd(.val, na.rm = na.rm) / base::sqrt(.n)
 }
 #----
 #' @name log.sc
@@ -52,10 +46,7 @@ r.se <- function(x, na.rm = T) {
 #' scales a vector to log10
 #' allows for negative or zero values
 log.sc <- function(x) {
-  ifelse(x <= 0, 
-         -log10(abs(x) + 1),
-         log10(x + 1)) %>%
-    suppressWarnings()
+  base::suppressWarnings(base::ifelse(x <= 0, -base::log10(base::abs(x) + 1), base::log10(x + 1)))
 }
 #----
 #' @name summary.fcs
@@ -65,16 +56,15 @@ log.sc <- function(x) {
 #' @description 
 #' a tidyverse wrapper for calculating common summary statistics for flow cytometry data. includes number of cells (n), median (median), geometric mean (geo.mean), arithmetic mean (mean), standard deviation (sd), standard error (se), robust standard deviation (r.sd), and robust standard error (r.se).
 summary.fcs <- function(data, na.rm = TRUE){
-  data <- data %>%
-    reframe(.n = n(),
-            median = median(.val, na.rm = na.rm),
+  data %>%
+    dplyr::reframe(.n = dplyr::n(),
+            median = stats::median(.val, na.rm = na.rm),
             geo.mean = geo.mean(.val, na.rm = na.rm),
-            mean = mean(.val, na.rm = na.rm),
-            sd = sd(.val, na.rm = na.rm),
+            mean = base::mean(.val, na.rm = na.rm),
+            sd = stats::sd(.val, na.rm = na.rm),
             se = se(.val, na.rm = na.rm),
             r.sd = r.sd(.val, na.rm = na.rm),
-            r.se = r.sd(.val, na.rm = na.rm) / sqrt(.n))
-  return(data)
+            r.se = r.sd(.val, na.rm = na.rm) / base::sqrt(.n))
 }
 
 #-------------------
@@ -86,18 +76,18 @@ summary.fcs <- function(data, na.rm = TRUE){
 #' @description 
 #' simple wrapper that reads a *.fcs to a dataframe
 read.fcs <- function(path){
-  data <- list()
-  if(str_detect(path, ".fcs$") == T){
+  data <- base::list()
+  if(stringr::str_detect(path, ".fcs$") == T){
     file <- path
     name <- file
   } else {
-    file <- list.files(path, ".fcs$", full.names = T)
-    name <- list.files(path, ".fcs$", full.names = F)
+    file <- base::list.files(path, ".fcs$", full.names = T)
+    name <- base::list.files(path, ".fcs$", full.names = F)
   }
-  for(i in 1:length(file)){
-    df <- data.frame(flowCore::read.FCS(file[i], transformation = F)@exprs)
+  for(i in 1:base::length(file)){
+    df <- base::data.frame(flowCore::read.FCS(file[i], transformation = F)@exprs)
     data[[i]] <- df
-    names(data)[[i]] <- str_remove(name[i], ".fcs$")
+    base::names(data)[[i]] <- stringr::str_remove(name[i], ".fcs$")
   }
   data <- plyr::ldply(data)
   return(data)
@@ -109,19 +99,19 @@ read.fcs <- function(path){
 #' a tidyr pipeline for standardizing .fcs data
 tidy.fcs <- function(data){
   data %>%
-    rename_with(.cols = everything(),
-                .fn = str_to_lower) %>%
-    select(-time) %>%
-    group_by(.id) %>%
-    mutate(.n = row_number()) %>%
-    ungroup() %>%
-    pivot_longer(-c(.n, .id),
+    dplyr::rename_with(.cols = tidyselect::everything(),
+                .fn = tidyselect::str_to_lower) %>%
+    dplyr::select(-time) %>%
+    dplyr::group_by(.id) %>%
+    dplyr::mutate(.n = dplyr::row_number()) %>%
+    dplyr::ungroup() %>%
+    tidyr::pivot_longer(-c(.n, .id),
                  names_to = ".ch",
                  values_to = ".val") %>%
-    mutate(.param = str_extract(.ch, ".[a|h|w]$"),
-           .ch = str_remove(.ch, ".[a|h|w]$")) %>%
-    select(.id, .n, .ch, .param, .val) %>%
-    arrange(.id, .n, .ch, .param, .val)
+    dplyr::mutate(.param = stringr::str_extract(.ch, ".[a|h|w]$"),
+           .ch = stringr::str_remove(.ch, ".[a|h|w]$")) %>%
+    dplyr::select(.id, .n, .ch, .param, .val) %>%
+    dplyr::arrange(.id, .n, .ch, .param, .val)
 }
 #----
 #' @name process.fcs
@@ -130,17 +120,17 @@ tidy.fcs <- function(data){
 #' a pipeline for setting a standard processing protocol on flow cytometry data. log transforms all values, filters offscale events, then gates to most "average" cells in the population - within 1 s.d. of the median in all channels.
 process.fcs <- function(data){
   data %>% 
-    mutate(.val = log.sc(.val)) %>%
-    pivot_wider(names_from = ".ch",
+    dplyr::mutate(.val = log.sc(.val)) %>%
+    tidyr::pivot_wider(names_from = ".ch",
                 values_from = ".val") %>%
-    filter(if_all(.cols = -c(.id, .n, .param),
+    dplyr::filter(dplyr::if_all(.cols = -c(.id, .n, .param),
                   .fns = ~.x >= 0 & .x <= 5)) %>%
-    group_by(.id) %>%
-    filter(if_all(.cols = -c(.n, .param),
-                  .fns = ~.x <= median(.x) + (median(.x) * r.sd(.x)) &
-                    .x >= median(.x) - (median(.x) * r.sd(.x)))) %>%
-    ungroup() %>%
-    pivot_longer(cols = -c(.id, .n, .param),
+    dplyr::group_by(.id) %>%
+    dplyr::filter(dplyr::if_all(.cols = -c(.n, .param),
+                  .fns = ~.x <= stats::median(.x) + (stats::median(.x) * r.sd(.x)) &
+                    .x >= stats::median(.x) - (stats::median(.x) * r.sd(.x)))) %>%
+    dplyr::ungroup() %>%
+    tidyr::pivot_longer(cols = -c(.id, .n, .param),
                  names_to = ".ch",
                  values_to = ".val")
 }
@@ -151,10 +141,10 @@ process.fcs <- function(data){
 #' @description 
 #' function for re-labelling channels with new parameter names
 re.code <- function(x, mapping) {
-  labels <- unname(mapping)
-  names(labels) <- names(mapping)
-  out <- labels[match(x, names(mapping))]
-  out[is.na(out)] <- x[is.na(out)]
+  labels <- base::unname(mapping)
+  base::names(labels) <- base::names(mapping)
+  out <- labels[base::match(x, base::names(mapping))]
+  out[base::is.na(out)] <- x[base::is.na(out)]
   return(out)
 }
 #----
@@ -166,11 +156,11 @@ re.code <- function(x, mapping) {
 #' tailored for single color controls
 extract.scc <- function(model, neg = "af"){
   post <- model %>% 
-    as_draws_df() %>%
-    as_tibble() %>%
-    select(grep("^b_", colnames(.))) %>%
-    rename_with(.cols = everything(),
-                .fn = ~str_remove(.x, "^b_"))
+    brms::as_draws_df() %>%
+    tibble::as_tibble() %>%
+    dplyr::select(base::grep("^b_", base::colnames(.))) %>%
+    dplyr::rename_with(.cols = tidyselect::everything(),
+                .fn = ~stringr::str_remove(.x, "^b_"))
   # true negative
   # autofluorescence channel in the unstained sample
   a. <- post %>%
@@ -257,11 +247,11 @@ theme_custom <- theme_classic(base_size = 24) +
 #' wrapper for making a ggplot object that plots the fluorescent intensities in each channel of a dataframe as density plots (waves). 
 plot.wave <- function(data){
   data %>%
-    ggplot(aes(x = .val, fill = .ch, alpha = 0.1)) +
-    geom_density() +
-    facet_grid(rows = vars(.ch)) +
-    guides(alpha = "none", fill = "none") +
-    theme_custom
+    ggplot2::ggplot(aes(x = .val, fill = .ch, alpha = 0.1)) +
+    ggplot2::geom_density() +
+    ggplot2::facet_grid(rows = vars(.ch)) +
+    ggplot2::guides(alpha = "none", fill = "none") +
+    ggplot2::theme_classic()
 }
 #----
 #' @name plot.density
@@ -273,22 +263,22 @@ plot.wave <- function(data){
 #' a wrapper for making a ggplot object of the density of cells on two axes. creates a density column that estimates distance of each observation from the center of the channel. the product of density on both channels defines the density of cells. 
 plot.density <- function(data, x = fsc, y = ssc){
   data %>%
-    pivot_wider(names_from = ".ch",
+    tidyr::pivot_wider(names_from = ".ch",
                 values_from = ".val") %>%
-    mutate(.d.x = scale({{x}}, scale = F),
-           .d.y = scale({{y}}, scale = F),
-           .d.z = sqrt(abs(.d.x * .d.y))) %>%
-    mutate(across(.cols = .d.x:.d.z,
-                  .fns = ~abs(.x))) %>%
-    ggplot(aes(x = {{x}},
+    dplyr::mutate(.d.x = base::scale({{x}}, scale = F),
+           .d.y = base::scale({{y}}, scale = F),
+           .d.z = base::sqrt(base::abs(.d.x * .d.y))) %>%
+    dplyr::mutate(dplyr::across(.cols = .d.x:.d.z,
+                  .fns = ~base::abs(.x))) %>%
+    ggplot2::ggplot(aes(x = {{x}},
                y = {{y}},
                color = .d.z,
                alpha = 0.1)) +
-    geom_point(shape = 21) +
-    guides(color = "none", alpha = "none") +
-    scale_color_gradient2(low = "darkred",
+    ggplot2::geom_point(shape = 21) +
+    ggplot2::guides(color = "none", alpha = "none") +
+    ggplot2::scale_color_gradient2(low = "darkred",
                           mid = "gold",
                           high = "darkblue",
                           midpoint = 0.5) +
-  theme_custom
+    ggplot2::theme_classic()
 }
