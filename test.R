@@ -7,6 +7,36 @@ pacman::p_load(tidyverse)
 source("func.R")
 
 #-------------------
+# graphing
+#-------------------
+#----
+#' @title theme_custom
+#' @description a custom theme for ggplots that makes publication-ready figures
+theme_custom <- theme_classic(base_size = 24) +
+  # adjust axis title position
+  theme(axis.title.y=element_text(vjust=1.5), 
+        axis.title.x=element_text(vjust=0.2)) + 
+  # adjust plot margins and line element size
+  theme(plot.margin = unit(c(.3,.3,.6,.6), "cm"), 
+        line = element_line(linewidth = 1.25)) + 
+  # draw x and y axes
+  theme(axis.line.x = element_line(colour = "black"),
+        axis.line.y = element_line(colour = "black")) + 
+  #put margins around axis labels so that nothing overlaps
+  theme(axis.text.x = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm")),
+        axis.text.y = element_text(margin=unit(c(0.5,0.5,0.5,0.5), "cm"))) + 
+  # move tickmarks inside the axes and paint black
+  theme(axis.ticks.length =unit(-0.3, "cm")) + 
+  #spread out facets
+  theme(panel.spacing = unit(2, units = "lines")) + 
+  #make tick marks black
+  theme(axis.ticks = element_line(color = "black")) + 
+  #remove border from facet labels
+  theme(strip.background = element_blank()) 
+
+
+
+#-------------------
 # compensation
 #-------------------
 # set a path to the controls
