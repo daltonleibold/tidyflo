@@ -126,11 +126,11 @@ process.fcs <- function(data){
     dplyr::filter(dplyr::if_all(.cols = -c(.id, .n, .param),
                   .fns = ~.x >= 0 & .x <= 5)) %>%
     dplyr::group_by(.id) %>%
-    dplyr::filter(dplyr::if_all(.cols = -c(.n, .param),
+    dplyr::filter(dplyr::if_all(.cols = -base::c(.n, .param),
                   .fns = ~.x <= stats::median(.x) + (stats::median(.x) * r.sd(.x)) &
                     .x >= stats::median(.x) - (stats::median(.x) * r.sd(.x)))) %>%
     dplyr::ungroup() %>%
-    tidyr::pivot_longer(cols = -c(.id, .n, .param),
+    tidyr::pivot_longer(cols = -base::c(.id, .n, .param),
                  names_to = ".ch",
                  values_to = ".val")
 }
@@ -164,52 +164,52 @@ extract.scc <- function(model, neg = "af"){
   # true negative
   # autofluorescence channel in the unstained sample
   a. <- post %>%
-    reframe(.ch = neg,
+    dplyr::reframe(.ch = neg,
             .samp = neg,
             .val = Intercept)
   # autofluorescence spillover / channel background
   # fluorescent signal in each channel of the unstained control
   b. <- post %>%
-    select(Intercept, grep("^.ch", colnames(.))) %>%
-    select(-grep(":", colnames(.))) %>%
-    rename_with(.cols = everything(),
+    dplyr::select(Intercept, base::grep("^.ch", base::colnames(.))) %>%
+    dplyr::select(-base::grep(":", base::colnames(.))) %>%
+    dplyr::rename_with(.cols = everything(),
                 .fn = ~str_remove(.x, "^.ch")) %>%
-    pivot_longer(-Intercept,
+    tidyr::pivot_longer(-Intercept,
                  names_to = ".ch",
                  values_to = ".val") %>%
-    mutate(.val = Intercept + .val,
+    dplyr::mutate(.val = Intercept + .val,
            .samp = "af") %>%
-    select(.ch, .samp, .val)
+    dplyr::select(.ch, .samp, .val)
   # dye-induce autofluorescence
   # autofluorescent channel in each single color control
   c. <- post %>%
-    select(Intercept, grep("^.samp", colnames(.))) %>%
-    select(-grep(":", colnames(.))) %>%
-    rename_with(.cols = everything(),
-                .fn = ~str_remove(.x, "^.samp")) %>%
-    pivot_longer(-Intercept,
+    dplyr::select(Intercept, base::grep("^.samp", base::colnames(.))) %>%
+    dplyr::select(-base::grep(":", base::colnames(.))) %>%
+    dplyr::rename_with(.cols = tidyselect::everything(),
+                .fn = ~stringr::str_remove(.x, "^.samp")) %>%
+    tidyr::pivot_longer(-Intercept,
                  names_to = ".samp",
                  values_to = ".val") %>%
-    mutate(.val = Intercept + .val,
+    dplyr::mutate(.val = Intercept + .val,
            .ch = neg) %>%
-    select(.ch, .samp, .val)
+    dplyr::select(.ch, .samp, .val)
   # fluorescent spillover
   # each of the fluorescent channels for each of the single color controls
   d. <- post %>%
-    select(Intercept, grep(":", colnames(.))) %>%
-    rename_with(.cols = everything(),
-                .fn = ~str_remove(.x, "^.samp")) %>%
-    rename_with(.cols = everything(),
-                .fn = ~str_remove(.x, ".ch")) %>%
-    pivot_longer(-Intercept,
+    dplyr::select(Intercept, base::grep(":", base::colnames(.))) %>%
+    dplyr::rename_with(.cols = tidyselect::everything(),
+                .fn = ~stringr::str_remove(.x, "^.samp")) %>%
+    dplyr::rename_with(.cols = tidyselect::everything(),
+                .fn = ~stringr::str_remove(.x, ".ch")) %>%
+    tidyr::pivot_longer(-Intercept,
                  names_to = ".samp.ch",
                  values_to = ".val") %>%
-    separate(col = .samp.ch,
-             into = c(".samp", ".ch"),
+    tidyr::separate(col = .samp.ch,
+             into = base::c(".samp", ".ch"),
              sep = ":") %>%
-    select(.ch, .samp, .val)
+    dplyr::select(.ch, .samp, .val)
   # bind the extracted distributions back together
-  data <- rbind(a., b., c., d.)
+  data <- base::rbind(a., b., c., d.)
   return(data)
 }
 #-------------------
