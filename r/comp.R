@@ -34,7 +34,40 @@ data <- read.fcs("../data") %>%
                                         "buv.496" = "h42"))) %>%
   # summarise the dataframe - need geo.mean and r.se for modelling
   group_by(.spec, .samp, .param, .ch) %>%
-  summary.fcs()
+  summary.fcs() %>%
+  filter(.spec == "scc") %>%
+  filter(.samp != "pos") %>%
+  filter(.ch != "fsc" & .ch != "ssc") %>%
+  mutate(.samp = ifelse(.samp == "neg", "af", .samp)) %>%
+  mutate(geo.mean = 10^geo.mean) %>%
+  mutate(.comp = ifelse(.samp == .ch, geo.mean, -geo.mean)) 
+
+data %>%
+  # make a compensation matrix
+  ggplot(aes(x = .ch, y = .samp, 
+             fill = .comp, group = .ch)) +
+  geom_tile(color = "black", linewidth = 0.5) +
+  scale_fill_gradient2(low = "coral",
+                       mid = "gold",
+                       high = "seagreen") +
+  geom_text(aes(label = round(.comp, 2)),
+            color = "black", size = 4) + 
+  xlab("Channel") +
+  ylab("Control") +
+  guides(fill = "none") +
+  theme_custom
+
+comps <- data %>%
+  group_by(.ch) %>%
+  reframe(.comp = sum(.comp)) %>%
+  pivot_wider(names_from = ".ch",
+              values_from = ".comp") %>%
+  mutate(fsc = af,
+         ssc = af) %>%
+  pivot_longer(everything(),
+               names_to = ".ch",
+               values_to = ".comp")
+
 
 
 bf.norm <- bf(geo.mean | se(r.se) ~ 0 + .ch * .spec + (1|.spec:.samp)) + gaussian()

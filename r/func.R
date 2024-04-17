@@ -100,7 +100,7 @@ read.fcs <- function(path){
 tidy.fcs <- function(data){
   data %>%
     dplyr::rename_with(.cols = tidyselect::everything(),
-                .fn = tidyselect::str_to_lower) %>%
+                .fn = stringr::str_to_lower) %>%
     dplyr::select(-time) %>%
     dplyr::group_by(.id) %>%
     dplyr::mutate(.n = dplyr::row_number()) %>%
