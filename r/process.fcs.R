@@ -15,11 +15,11 @@ process.fcs <- function(data){
     dplyr::filter(dplyr::if_all(.cols = -c(.id, .n, .param),
                   .fns = ~.x >= 0 & .x <= 5)) %>%
     dplyr::group_by(.id) %>%
-    dplyr::filter(dplyr::if_all(.cols = -base::c(.n, .param),
+    dplyr::filter(dplyr::if_all(.cols = -c(.n, .param),
                   .fns = ~.x <= stats::median(.x) + (stats::median(.x) * r.sd(.x)) &
                     .x >= stats::median(.x) - (stats::median(.x) * r.sd(.x)))) %>%
     dplyr::ungroup() %>%
-    tidyr::pivot_longer(cols = -base::c(.id, .n, .param),
+    tidyr::pivot_longer(cols = -c(.id, .n, .param),
                  names_to = ".ch",
                  values_to = ".val")
 }
