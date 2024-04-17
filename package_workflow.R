@@ -19,3 +19,13 @@ devtools::check()
 
 # Create test folder
 usethis::use_testthat()
+
+
+# Example data that are used in tests
+fcs_dat_1 <- data.frame(
+  x = c(1, 2, 3, 4, 5),
+  y = c(2, 4, 6, 8, 10)
+)
+usethis::use_data(fcs_dat_1, overwrite = TRUE)
+
+devtools::test()
