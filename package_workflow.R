@@ -16,3 +16,6 @@ devtools::load_all()
 
 # Check loaing
 devtools::check()
+
+# Create test folder
+usethis::use_testthat()
