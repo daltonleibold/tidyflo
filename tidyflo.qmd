@@ -1,0 +1,87 @@
+---
+title: "**tidflo: An R package for drawing 'flowy' data and plots**"
+author: "**Dalton Leibold and D.W.A. Noble**"
+date: "`r Sys.Date()`"
+format:
+  html:
+    toc: true
+    toc-location: left
+    toc-depth: 3
+    toc-title: "**Table of Contents**"
+    output-file: "index.html"
+    theme: simplex
+    embed-resources: true
+    code-fold: show
+    code-tools: true
+    number-sections: true
+    fontsize: "12"
+    max-width: "10"
+    code-overflow: wrap
+crossref: 
+  fig-title: Figure     # (default is "Figure")
+  tbl-title: Table     # (default is "Table")
+  title-delim: —     # (default is ":")
+  fig-prefix: Fig.   # (default is "Figure")
+  tbl-prefix: Tab.    # (default is "Table")
+editor_options: 
+  chunk_output_type: console
+---
+
+
+```{r setup}
+#| label: setup
+#| include: false
+knitr::opts_chunk$set(echo = TRUE, cache = FALSE, tidy = TRUE)
+options(digits=2)
+```
+
+
+# **Citing `tidyflo`**
+
+To cite `tidyflo` in publications one can use the following reference:
+
+Shinichi Nakagawa, Malgorzata Lagisz, Rose E. O'Dea, Patrice Pottier, Joanna Rutkowska, Alistair M. Senior, Yefeng Yang, Daniel W.A. Noble. 2023. orchaRd 2.0: An R package for visualizing meta-analyses with orchard plots. **Methods in Ecology and Evolution**, https://doi.org/10.1111/2041-210X.14152 (preprint = **EcoEvoRxiv**, https://doi.org/10.32942/X2QC7). 
+
+# **Installation**
+
+To install `orchaRd` use the following code in R:
+
+
+:::{.column-margin}
+:::{.callout-note}
+If you want to download the development branch, which contains newer features you can execute the following code:
+
+```{r loadtidyflo_dev}
+#| label: loadtidyflo_dev
+#| echo: true
+#| eval: false
+#| results: hide
+#| code-fold: true
+rm(list = ls())
+pacman::p_load(devtools, tidyverse, patchwork, flextable)
+devtools::install_github("daltonleibold/tidyflo", ref = "dev", force = TRUE)
+pacman::p_load(tidyflo)
+```
+
+It's important to note that this version may not be as stable as the master branch.
+
+:::
+:::
+
+```{r loadtidyflo}
+#| label: loadtidyflo
+#| echo: true
+#| results: hide
+#| code-fold: true
+#| eval: false
+#| warning: FALSE
+#| message: FALSE
+
+#install.packages("pacman")
+rm(list = ls())
+pacman::p_load(devtools, tidyverse, patchwork, flextable)
+devtools::install_github("daltonleibold/tidyflo", ref = "main", force = TRUE)
+pacman::p_load(tidyflo)
+```
+
+Installation will make the primary functions accessible to users along with their help files. You will also need the `tidyverse` and `metafor` packages.
